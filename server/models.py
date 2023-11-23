@@ -47,3 +47,52 @@ class Review(db.Model, SerializerMixin):
         return f'<Review: {self.description}>'
     
 
+class Vendor(db.Model, SerializerMixin):
+    __tablename__ = "vendors"
+
+    serialize_rules = ("-vendor_products.vendor",)
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    rating = db.Column(db.Float)
+
+    vendor_products = db.relationship('VendorProduct', backref='vendor', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Vendor: {self.name}>'
+
+class Product(db.Model, SerializerMixin):
+    __tablename__ = "products"
+
+    serialize_rules = ("-vendor_products.product",)
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    tags = db.Column(db.String)
+
+
+    vendor_products = db.relationship('VendorProduct', backref='product', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Product: {self.name}>'
+
+class VendorProduct(db.Model, SerializerMixin):
+    __tablename__ = "vendor_products"
+
+    vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), primary_key=True)
+    cost = db.Column(db.Float)
+    rating = db.Column(db.Float)
+    delivery_cost = db.Column(db.Float)
+    mode_of_payment = db.Column(db.String)
+    discount = db.Column(db.Float)
+    description = db.Column(db.String)
+    
+
+    def __repr__(self):
+        return f'<VendorProduct: Vendor {self.vendor_id} - Product {self.product_id}>'
+
+
+
+
+
