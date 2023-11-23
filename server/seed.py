@@ -9,9 +9,8 @@ fake = Faker()
 
 with app.app_context():
 
-    # Seed Users
     users = []
-    for i in range(30):
+    for i in range(40):
         user = User(
             username=fake.user_name(),
             email=fake.email(),
@@ -21,10 +20,9 @@ with app.app_context():
 
     db.session.add_all(users)
 
-    # Seed Search Histories
     search_histories = []
     for user in users:
-        for _ in range(5):
+        for _ in range(500):
             search_history = SearchHistory(
                 search_query=fake.word(),
                 timestamp=fake.date_time_this_year(),
@@ -34,10 +32,9 @@ with app.app_context():
 
     db.session.add_all(search_histories)
 
-    # Seed Reviews
     reviews = []
     for user in users:
-        for i in range(3):
+        for i in range(10):
             review = Review(
                 description=fake.paragraph(),
                 user=user,
@@ -47,9 +44,8 @@ with app.app_context():
 
     db.session.add_all(reviews)
 
-    # Seed Vendors
     vendors = []
-    for i in range(5):
+    for i in range(20):
         vendor = Vendor(
             name=fake.company(),
             rating=round(random.uniform(3.0, 5.0), 2)
@@ -58,9 +54,8 @@ with app.app_context():
 
     db.session.add_all(vendors)
 
-    # Seed Products
     products = []
-    for i in range(10):
+    for i in range(100):
         product = Product(
             name=fake.word(),
             tags=' '.join(fake.words())
@@ -69,7 +64,6 @@ with app.app_context():
 
     db.session.add_all(products)
 
-    # Seed VendorProducts (Many-to-Many Relationship)
     vendor_products = []
     for product in products:
         vendor_product = VendorProduct(
@@ -86,5 +80,5 @@ with app.app_context():
 
     db.session.add_all(vendor_products)
 
-    # Commit changes to the database
+
     db.session.commit()
