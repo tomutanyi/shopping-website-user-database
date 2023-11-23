@@ -121,32 +121,6 @@ class UserSearchQueries(Resource):
     
 api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpoint='user_search_queries')
 
-
-class VendorProducts(Resource):
-    def get(self):
-        vendor_products = [
-            {
-                'vendor': vendor_product.vendor.to_dict(),
-                'product': vendor_product.product.to_dict(),
-                'cost': vendor_product.cost,
-                'rating': vendor_product.rating,
-                'delivery_cost': vendor_product.delivery_cost,
-                'mode_of_payment': vendor_product.mode_of_payment,
-                'discount': vendor_product.discount,
-                'description': vendor_product.description,
-            }
-            for vendor_product in VendorProduct.query.all()
-        ]
-
-        response = make_response(
-            jsonify(vendor_products),
-            200
-        )
-        return response
-
-
-api.add_resource(VendorProducts, '/vendor_products', endpoint='vendor_products')
-
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
 
