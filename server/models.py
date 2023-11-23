@@ -7,7 +7,7 @@ db = SQLAlchemy()
 class User(db.Model, SerializerMixin):
     __tablename__ = "users"
 
-    serialize_rules = ("-search_history.user", "-reviews.user")
+    serialize_rules = ("-search_history.user.password", "-search_history.user.reviews", "-reviews.user.password",)
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False)
@@ -19,6 +19,14 @@ class User(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<User: {self.username}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'password': self.password,
+        }
 
 class SearchHistory(db.Model, SerializerMixin):
     __tablename__ = "search_history"
@@ -28,10 +36,16 @@ class SearchHistory(db.Model, SerializerMixin):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    serialize_rules = ("-user.search_history",)
-
     def __repr__(self):
         return f'<SearchHistory: {self.search_query}>'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'search_query': self.search_query,
+            'timestamp': self.timestamp,
+            'user_id': self.user_id,
+        }
 
 class Review(db.Model, SerializerMixin):
     __tablename__ = "reviews"
@@ -45,6 +59,15 @@ class Review(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<Review: {self.description}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'description': self.description,
+            'user_id': self.user_id,
+            'star_rating': self.star_rating,
+        }
+
     
 
 class Vendor(db.Model, SerializerMixin):
@@ -69,6 +92,7 @@ class Product(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     tags = db.Column(db.String)
+    # image url
 
 
     vendor_products = db.relationship('VendorProduct', backref='product', lazy='dynamic')
@@ -77,6 +101,7 @@ class Product(db.Model, SerializerMixin):
         return f'<Product: {self.name}>'
 
 class VendorProduct(db.Model, SerializerMixin):
+    
     __tablename__ = "vendor_products"
 
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), primary_key=True)
@@ -87,6 +112,7 @@ class VendorProduct(db.Model, SerializerMixin):
     mode_of_payment = db.Column(db.String)
     discount = db.Column(db.Float)
     description = db.Column(db.String)
+
     
 
     def __repr__(self):
