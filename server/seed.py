@@ -9,6 +9,13 @@ fake = Faker()
 
 with app.app_context():
 
+    User.query.delete()
+    SearchHistory.query.delete()
+    Review.query.delete()
+    Vendor.query.delete()
+    Product.query.delete()
+    VendorProduct.query.delete()
+
     users = []
     for i in range(40):
         user = User(
@@ -22,7 +29,7 @@ with app.app_context():
 
     search_histories = []
     for user in users:
-        for _ in range(500):
+        for i in range(3):
             search_history = SearchHistory(
                 search_query=fake.word(),
                 timestamp=fake.date_time_this_year(),
@@ -34,7 +41,7 @@ with app.app_context():
 
     reviews = []
     for user in users:
-        for i in range(10):
+        for i in range(2):
             review = Review(
                 description=fake.paragraph(),
                 user=user,
