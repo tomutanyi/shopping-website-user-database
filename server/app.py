@@ -118,6 +118,31 @@ class UserReviews(Resource):
             201
         )
         return response
+    
+    def patch(self, user_id, review_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        review = Review.query.filter_by(id=review_id, user_id=user_id).first()
+        if review is None:
+            return make_response(jsonify(message=f"Review with ID {review_id} not found for User {user_id}"), 404)
+
+        # Get updated review details from the request
+        new_description = request.get_json().get('description')
+
+        # Update the review description
+        review.description = new_description
+        db.session.commit()
+
+        response = make_response(
+            jsonify(review.to_dict()),
+            200
+        )
+        return response
+    
+api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='update_review_description')
+    
 
 
     
