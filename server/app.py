@@ -94,6 +94,33 @@ class UserReviews(Resource):
         )
         return response
     
+    def post(self, user_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        # Get review details from the request
+        description = request.get_json().get('description')
+        star_rating = request.get_json().get('star_rating')
+
+        # Create a new review for the user
+        new_review = Review(
+            user_id=user.id,
+            description=description,
+            star_rating=star_rating
+        )
+
+        db.session.add(new_review)
+        db.session.commit()
+
+        response = make_response(
+            jsonify(new_review.to_dict()),
+            201
+        )
+        return response
+
+
+    
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews', endpoint='user_reviews')
 
 class AllSearchQueries(Resource):
