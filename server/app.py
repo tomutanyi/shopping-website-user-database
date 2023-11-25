@@ -141,6 +141,55 @@ class UserReviews(Resource):
         )
         return response
     
+    def delete(self, user_id, review_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        review = Review.query.filter_by(id=review_id, user_id=user_id).first()
+        if review is None:
+            return make_response(jsonify(message=f"Review with ID {review_id} not found for User {user_id}"), 404)
+
+        # Delete the review
+        db.session.delete(review)
+        db.session.commit()
+
+        return make_response(jsonify(message=f"Review with ID {review_id} for User {user_id} deleted"), 200)
+    
+    def get(self, user_id, review_id=None):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        if review_id is not None:
+            # Retrieve a specific review by ID
+            review = Review.query.filter_by(id=review_id, user_id=user_id).first()
+            if review is None:
+                return make_response(jsonify(message=f"Review with ID {review_id} not found for User {user_id}"), 404)
+
+            response = make_response(
+                jsonify(review.to_dict()),
+                200
+            )
+            return response
+        else:
+            # Retrieve all reviews for the user
+            user_reviews = [review.to_dict() for review in user.reviews]
+
+            response = make_response(
+                jsonify(user_reviews),
+                200
+            )
+            return response
+
+# Add a new endpoint for deleting a review
+api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='get_review_by_id')
+
+# Existing code (unchanged)
+
+
+api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='delete_review')
+    
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='update_review_description')
     
 
@@ -175,6 +224,20 @@ class UserSearchQueries(Resource):
         return response
     
 api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpoint='user_search_queries')
+
+
+class AllVendorProducts(Resource):
+    def get(self):
+        all_vendor_products = [vp.to_dict() for vp in VendorProduct.query.all()]
+        
+        if not all_vendor_products:
+            return jsonify({'message': 'No Vendor products found'}), 404
+    
+
+        response = make_response(jsonify(all_vendor_products), 200)
+        return response
+
+api.add_resource(AllVendorProducts, '/vendor_products', endpoint='all_vendor_products')
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)

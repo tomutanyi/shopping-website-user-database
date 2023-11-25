@@ -25,7 +25,7 @@ class User(db.Model, SerializerMixin):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'password': self.password,
+            # 'password': self.password,
         }
 
 class SearchHistory(db.Model, SerializerMixin):
@@ -117,6 +117,22 @@ class VendorProduct(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f'<VendorProduct: Vendor {self.vendor_id} - Product {self.product_id}>'
+    
+    
+    def to_dict(self):
+        return {
+            'vendor_id': self.vendor_id,
+            'product_id': self.product_id,
+            'cost': self.cost,
+            'rating': self.rating,
+            'delivery_cost': self.delivery_cost,
+            'mode_of_payment': self.mode_of_payment,
+            'discount': self.discount,
+            'description': self.description,
+            'vendor': self.vendor.name,
+            'product': self.product.name,
+            'product_tags': self.product.tags,
+        }
 
 
 
