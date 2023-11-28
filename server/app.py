@@ -34,10 +34,12 @@ class Users(Resource):
     def post(self):
         username = request.get_json()['username']
         email = request.get_json()['email']
+        password = request.get_json()['password']
 
         new_user = User(
             username=username,
-            email=email
+            email=email,
+            password=password
         )
 
         db.session.add(new_user)
