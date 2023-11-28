@@ -40,7 +40,6 @@ class Users(Resource):
             username=username,
             email=email,
             password=password
-
         )
 
         db.session.add(new_user)
