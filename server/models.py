@@ -92,7 +92,8 @@ class Product(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     tags = db.Column(db.String)
-    # image url
+    description = db.Column(db.String(255), nullable=False)
+
 
 
     vendor_products = db.relationship('VendorProduct', backref='product', lazy='dynamic')
@@ -131,7 +132,7 @@ class VendorProduct(db.Model, SerializerMixin):
             'description': self.description,
             'vendor': self.vendor.name,
             'product': self.product.name,
-            'product_tags': self.product.tags,
+            'product_description': self.product.description,
         }
 
 

@@ -240,6 +240,6 @@ class AllVendorProducts(Resource):
 api.add_resource(AllVendorProducts, '/vendor_products', endpoint='all_vendor_products')
 
 if __name__ == "__main__":
-    app.run(port=5555, debug=True)
+    app.run(port=5556, debug=True)
 
 
