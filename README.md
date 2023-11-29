@@ -13,3 +13,7 @@ The repository containing back end code for shoppers community.
 4. `flask db upgrade`
 
 5. `python seed.py`
+
+## Entity Relationship Diagram
+
+![ERD diagram](erd.png)
