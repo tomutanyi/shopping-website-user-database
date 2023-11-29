@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
 
-from models import db, User, Review, SearchHistory, VendorProduct
+from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
@@ -227,15 +227,27 @@ api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpo
 
 class AllVendorProducts(Resource):
     def get(self):
-        all_vendor_products = [vp.to_dict() for vp in VendorProduct.query.all()]
-        
-        if not all_vendor_products:
-            return jsonify({'message': 'No Vendor products found'}), 404
-    
+        product_name = request.args.get('product_name')
 
-        response = make_response(jsonify(all_vendor_products), 200)
+        if product_name:
+            filtered_vendor_products = VendorProduct.query \
+                .join(Product) \
+                .filter(Product.name.ilike(f"%{product_name}%")) \
+                .all()
+
+            if not filtered_vendor_products:
+                return jsonify({'message': f'No Vendor products found for product name: {product_name}'}), 404
+
+            response = make_response(jsonify([vp.to_dict() for vp in filtered_vendor_products]), 200)
+        else:
+            all_vendor_products = VendorProduct.query.all()
+
+            if not all_vendor_products:
+                return jsonify({'message': 'No Vendor products found'}), 404
+
+            response = make_response(jsonify([vp.to_dict() for vp in all_vendor_products]), 200)
+
         return response
-
 api.add_resource(AllVendorProducts, '/vendor_products', endpoint='all_vendor_products')
 
 if __name__ == "__main__":
