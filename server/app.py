@@ -3,14 +3,18 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
-app.config['SECRET_KEY'] ="msjahcufufrndf"
+app.config['SECRET_KEY'] = os.environ["SECRET_KEY"]
 
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///shopping.db'
+app.config['SQLALCHEMY_DATABASE_URI']=os.environ["DATABASE_URI"]
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= True
 
