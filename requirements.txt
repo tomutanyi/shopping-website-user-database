@@ -18,6 +18,7 @@ itsdangerous
 jinja2
 mako
 markupsafe
+psycopg2
 python-dateutil
 pytz
 six
