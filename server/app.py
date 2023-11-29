@@ -21,7 +21,6 @@ api = Api(app)
 
 db.init_app(app)
 
-
 # reviews search queries
 class UserReviewsSearchQueries(Resource):
     def get(self, user_id):
@@ -39,7 +38,6 @@ class UserReviewsSearchQueries(Resource):
     
     # endpoint to retrieve reviews search queries
     pi.add_resource(UserReviewsSearchQueries, 'user/<int:user_id>/search_queries/reviews', endpoint='user_search_queries_reviews')
-
 
 class Users(Resource):
     def get(self):
