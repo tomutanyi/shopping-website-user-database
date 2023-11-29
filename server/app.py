@@ -286,6 +286,29 @@ class UserSearchQueries(Resource):
             200
         )
         return response
+
+    def post(self, user_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        # Get search query details from the request
+        search_query = request.get_json().get('search_query')
+
+        # Create a new search query for the user
+        new_search_query = SearchHistory(
+            user_id=user.id,
+            search_query=search_query
+        )
+
+        db.session.add(new_search_query)
+        db.session.commit()
+
+        response = make_response(
+            jsonify(new_search_query.to_dict()),
+            201
+        )
+        return response
     
 api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpoint='user_search_queries')
 
