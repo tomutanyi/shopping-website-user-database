@@ -21,13 +21,13 @@ api = Api(app)
 
 db.init_app(app)
 
-# reviews search queries
 class UserReviewsSearchQueries(Resource):
     def get(self, user_id):
         user = User.query.get(user_id)
         if user is None:
-            return make_response(jsonify(mesage=f"User with ID {user_id} not found"),404)
-        # user's search queries for reviews
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        # Getting user's search queries for reviews
         user_search_queries = [search.to_dict() for search in user.search_history if search.review_id is not None]
 
         response = make_response(
@@ -35,9 +35,9 @@ class UserReviewsSearchQueries(Resource):
             200
         )
         return response
-    
-    # endpoint to retrieve reviews search queries
-    pi.add_resource(UserReviewsSearchQueries, 'user/<int:user_id>/search_queries/reviews', endpoint='user_search_queries_reviews')
+
+# endpoint for retrieving user search queries for reviews
+api.add_resource(UserReviewsSearchQueries, '/users/<int:user_id>/search_queries/reviews', endpoint='user_search_queries_reviews')
 
 class Users(Resource):
     def get(self):
