@@ -22,6 +22,72 @@ api = Api(app)
 db.init_app(app)
 
 
+class CheckSession(Resource):
+    def get(self):
+        if session.get('user_id'):
+            user = User.query.filter_by(id=session['user_id']).first()
+            return user.to_dict(), 200
+        return {'error': 'resource not found'}
+    
+api.add_resource(CheckSession, '/session', endpoint='check_session')
+    
+class SignUp(Resource):
+    def post(self):
+        username = request.get_json()['username']
+        email = request.get_json()['email']
+        password = request.get_json()['password']
+
+        new_user = User(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        session['user_id'] = new_user.id
+
+        response = make_response(
+            jsonify(new_user.to_dict()),
+            201
+        )
+
+        return response
+        
+api.add_resource(SignUp, '/signup', endpoint='signup')
+
+class Login(Resource):
+    def post(self):
+        username = request.get_json()['username']
+        password = request.get_json()['password']
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and (user.password == password):
+            session['user_id'] = user.id
+
+
+            response = make_response(jsonify(user.to_dict()), 200)
+            return response
+
+        else:
+            return {'error': 'username or password is incorrect'},401
+        
+api.add_resource(Login, '/login', endpoint='login')
+        
+class Logout(Resource):
+    def delete(self):
+        if session.get('user_id'):
+            session['user_id'] = None
+
+            return {'message': 'user logged out successfully'}, 200
+        
+        else:
+            return {'error': 'action not authorized'}, 401
+        
+api.add_resource(Logout, '/logout', endpoint='logout')
+
 class Users(Resource):
     def get(self):
         users = [user.to_dict() for user in User.query.all()]
@@ -44,7 +110,6 @@ class Users(Resource):
 
         db.session.add(new_user)
         db.session.commit()
-
         response = make_response(
             jsonify(new_user.to_dict()),
             201
