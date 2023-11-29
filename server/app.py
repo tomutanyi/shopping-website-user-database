@@ -12,7 +12,8 @@ from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
-app.config['SECRET_KEY'] = os.environ["SECRET_KEY"]
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "default_secret_key")
+
 
 app.config['SQLALCHEMY_DATABASE_URI']=os.environ["DATABASE_URI"]
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

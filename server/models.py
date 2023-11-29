@@ -93,6 +93,9 @@ class Product(db.Model, SerializerMixin):
     name = db.Column(db.String(255), nullable=False)
     tags = db.Column(db.String)
     description = db.Column(db.String(255), nullable=False)
+    base_cost = db.Column(db.Float, nullable=False, default=0)
+    category = db.Column(db.String(255), nullable=False)
+    image_url = db.Column(db.String(255), nullable=False)
 
 
 
@@ -105,6 +108,7 @@ class VendorProduct(db.Model, SerializerMixin):
     
     __tablename__ = "vendor_products"
 
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'), primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), primary_key=True)
     cost = db.Column(db.Float)
