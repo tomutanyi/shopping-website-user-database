@@ -315,6 +315,8 @@ class AllVendorProducts(Resource):
         return response
 api.add_resource(AllVendorProducts, '/vendor_products', endpoint='all_vendor_products')
 
+
+
 if __name__ == "__main__":
     app.run(port=5556, debug=True)
 
