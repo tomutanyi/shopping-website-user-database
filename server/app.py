@@ -59,12 +59,12 @@ api.add_resource(SignUp, '/signup', endpoint='signup')
 
 class Login(Resource):
     def post(self):
-        username = request.get_json()['username']
+        email = request.get_json()['email']
         password = request.get_json()['password']
 
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
 
-        if user and (user.password == password):
+        if email and (user.password == password):
             session['user_id'] = user.id
 
 
@@ -72,7 +72,7 @@ class Login(Resource):
             return response
 
         else:
-            return {'error': 'username or password is incorrect'},401
+            return {'error': 'email or password is incorrect'},401
         
 api.add_resource(Login, '/login', endpoint='login')
         
