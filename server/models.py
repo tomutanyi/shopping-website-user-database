@@ -35,6 +35,7 @@ class SearchHistory(db.Model, SerializerMixin):
     search_query = db.Column(db.String)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    test = db.Column(db.String)
 
     def __repr__(self):
         return f'<SearchHistory: {self.search_query}>'
