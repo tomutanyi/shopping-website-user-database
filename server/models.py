@@ -66,6 +66,7 @@ class Review(db.Model, SerializerMixin):
             'description': self.description,
             'user_id': self.user_id,
             'star_rating': self.star_rating,
+            'username': self.user.username if self.user else None,
         }
 
     
