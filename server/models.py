@@ -134,7 +134,7 @@ class VendorProduct(db.Model, SerializerMixin):
             'delivery_cost': self.delivery_cost,
             'mode_of_payment': self.mode_of_payment,
             'discount': self.discount,
-            'description': self.description,
+            # 'description': self.description,
             'vendor': self.vendor.name,
             'product': self.product.name,
             'product_description': self.product.description,
