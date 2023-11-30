@@ -2,6 +2,7 @@ from flask import Flask, make_response,jsonify,request,session
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
+from datetime import datetime
 from werkzeug.exceptions import NotFound
 import os
 # from dotenv import load_dotenv
@@ -289,6 +290,31 @@ class UserSearchQueries(Resource):
         response = make_response(
             jsonify(user_search_queries),
             200
+        )
+        return response
+
+    def post(self, user_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        data = request.get_json()
+        search_query = data.get('search_query')
+
+        if not search_query:
+            return make_response(jsonify(message="Search query is required"), 400)
+
+        new_search_query = SearchHistory(
+            search_query=search_query,
+            user=user  # You don't need to set the timestamp here; it will be set automatically by the database
+        )
+
+        db.session.add(new_search_query)
+        db.session.commit()
+
+        response = make_response(
+            jsonify(message=f"Search query added for user {user_id}"),
+            201
         )
         return response
     

@@ -1,71 +1,61 @@
-# seed.py
-
 from faker import Faker
-import random
-from random import choice as rc
-from app import app, db
-from models import User, SearchHistory, Review, Vendor, Product, VendorProduct
-from datetime import datetime
+import bcrypt
+from app import app
+from models import db, User, SearchHistory, Review
 
 fake = Faker()
 
-def seed_users(num_users=30):
-    users = []
-    for _ in range(num_users):
-        user = User(
-            username=fake.user_name(),
-            email=fake.email(),
-            password=fake.password(),
-        )
-        users.append(user)
-    db.session.add_all(users)
+with app.app_context():
+    # Delete existing data from the users, search histories, and reviews tables
+    db.session.query(Review).delete()
+    db.session.query(SearchHistory).delete()
+    db.session.query(User).delete()
+    
+    # Reset the sequence for the id column in the users table
+    db.session.execute("ALTER SEQUENCE users_id_seq RESTART WITH 1")
+
     db.session.commit()
 
-def seed_search_histories(users):
-    search_histories = []
-    for user in users:
-        for _ in range(5):
+    users = []
+    for i in range(41):
+        # Generate fake data
+        username = fake.user_name()
+        email = fake.email()
+
+        # Seed only the password column
+        fake_password_seeded = Faker()
+        fake_password_seeded.seed_instance(i)
+        plain_text_password = fake_password_seeded.password()
+
+        # Hash the password using bcrypt
+        hashed_password = bcrypt.hashpw(plain_text_password.encode('utf-8'), bcrypt.gensalt())
+
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_password.decode('utf-8'),
+        )
+        users.append(user)
+
+        search_histories = []
+        for i in range(5):
             search_history = SearchHistory(
                 search_query=fake.word(),
                 timestamp=fake.date_time_this_year(),
                 user=user
             )
             search_histories.append(search_history)
-    db.session.add_all(search_histories)
-    db.session.commit()
 
-def seed_reviews(users):
-    reviews = []
-    for user in users:
-        for _ in range(3):
+        reviews = []
+        for i in range(5):
             review = Review(
                 description=fake.paragraph(),
                 user=user,
-                star_rating=round(random.uniform(1.0, 5.0), 2)
+                star_rating=round(fake.random.uniform(1.0, 5.0), 2)
             )
             reviews.append(review)
+
+    db.session.add_all(users)
+    db.session.add_all(search_histories)
     db.session.add_all(reviews)
     db.session.commit()
-
-
-
-def seed_all():
-    with app.app_context():
-        db.create_all()
-
-        # Seed Users
-        users = User.query.all()
-        if not users:
-            seed_users()
-
-        # Seed Search Histories
-        if not SearchHistory.query.first():
-            seed_search_histories(users)
-
-        # Seed Reviews
-        if not Review.query.first():
-            seed_reviews(users)
-
-
-if __name__ == "__main__":
-    seed_all()
