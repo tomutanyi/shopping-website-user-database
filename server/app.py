@@ -24,10 +24,17 @@ db.init_app(app)
 
 class CheckSession(Resource):
     def get(self):
-        if session.get('user_id'):
-            user = User.query.filter_by(id=session['user_id']).first()
-            return user.to_dict(), 200
-        return {'error': 'resource not found'}
+        # if session.get('user_id'):
+        #     user = User.query.filter_by(id=session['user_id']).first()
+        #     return user.to_dict(), 200
+        # return {'error': 'resource not found'}, 401
+
+        user = User.query.filter(User.id == session.get('user_id')).first()
+
+        if user:
+            return (user.to_dict()), 200
+        else:
+            return {}, 401
     
 api.add_resource(CheckSession, '/session', endpoint='check_session')
     
@@ -64,10 +71,8 @@ class Login(Resource):
 
         user = User.query.filter_by(email=email).first()
 
-        if email and (user.password == password):
+        if user and (user.password == password):
             session['user_id'] = user.id
-
-
             response = make_response(jsonify(user.to_dict()), 200)
             return response
 
