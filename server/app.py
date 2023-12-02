@@ -3,18 +3,19 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
+from datetime import timedelta
 
 from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
 app.config['SECRET_KEY'] ="msjahcufufrndf"
-
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///shopping.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= True
 
-CORS(app)
+CORS(app, supports_credentials=True)
 
 migrate = Migrate(app, db)
 api = Api(app)
@@ -54,6 +55,7 @@ class SignUp(Resource):
         db.session.commit()
 
         session['user_id'] = new_user.id
+        session.permanent=True
 
         response = make_response(
             jsonify(new_user.to_dict()),
@@ -73,6 +75,7 @@ class Login(Resource):
 
         if user and (user.password == password):
             session['user_id'] = user.id
+            session.permanent = True
             response = make_response(jsonify(user.to_dict()), 200)
             return response
 
