@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from models import db, User, Review, SearchHistory, VendorProduct, Product
 
@@ -22,6 +22,37 @@ api = Api(app)
 
 db.init_app(app)
 
+#a dictionary to store user-specific search history
+user_history = {}
+
+def add_to_search_history(user_id):
+    if user_id not in user_history:
+        user_history[user_id] = []
+
+    for history_item in user_history[user_id]:
+        if history_item['pageUrl'] == request.path:
+            history_item['dateTime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            return
+
+    user_history[user_id].append({
+        'pageUrl': request.path,
+        'dateTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+@app.before_request
+def before_request():
+    user_id = request.headers.get('user-id')  #passing the user ID in the headers
+    add_to_search_history(user_id)
+
+@app.route('/api/history', methods=['GET'])
+def get_search_history():
+    user_id = request.headers.get('user-id')
+    if user_id in user_history:
+        unique_history = {item['pageUrl']: item for item in user_history[user_id]}.values()
+        return jsonify(list(unique_history))
+    else:
+        return jsonify([])
+
 # reviews search queries
 class UserReviewsSearchQueries(Resource):
     def get(self, user_id):
@@ -36,9 +67,6 @@ class UserReviewsSearchQueries(Resource):
             200
         )
         return response
-    
-    # endpoint to retrieve reviews search queries
-    pi.add_resource(UserReviewsSearchQueries, 'user/<int:user_id>/search_queries/reviews', endpoint='user_search_queries_reviews')
 
 class CheckSession(Resource):
     def get(self):
