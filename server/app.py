@@ -3,18 +3,19 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
+from datetime import timedelta
 
-from models import db, User, Review, SearchHistory, VendorProduct
+from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
 app.config['SECRET_KEY'] ="msjahcufufrndf"
-
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///shopping.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= True
 
-CORS(app)
+CORS(app, supports_credentials=True)
 
 migrate = Migrate(app, db)
 api = Api(app)
@@ -39,6 +40,79 @@ class UserReviewsSearchQueries(Resource):
     # endpoint to retrieve reviews search queries
     pi.add_resource(UserReviewsSearchQueries, 'user/<int:user_id>/search_queries/reviews', endpoint='user_search_queries_reviews')
 
+class CheckSession(Resource):
+    def get(self):
+        # if session.get('user_id'):
+        #     user = User.query.filter_by(id=session['user_id']).first()
+        #     return user.to_dict(), 200
+        # return {'error': 'resource not found'}, 401
+
+        user = User.query.filter(User.id == session.get('user_id')).first()
+
+        if user:
+            return (user.to_dict()), 200
+        else:
+            return {}, 401
+    
+api.add_resource(CheckSession, '/session', endpoint='check_session')
+    
+class SignUp(Resource):
+    def post(self):
+        username = request.get_json()['username']
+        email = request.get_json()['email']
+        password = request.get_json()['password']
+
+        new_user = User(
+            username=username,
+            email=email,
+            password=password
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        session['user_id'] = new_user.id
+        session.permanent=True
+
+        response = make_response(
+            jsonify(new_user.to_dict()),
+            201
+        )
+
+        return response
+        
+api.add_resource(SignUp, '/signup', endpoint='signup')
+
+class Login(Resource):
+    def post(self):
+        email = request.get_json()['email']
+        password = request.get_json()['password']
+
+        user = User.query.filter_by(email=email).first()
+
+        if user and (user.password == password):
+            session['user_id'] = user.id
+            session.permanent = True
+            response = make_response(jsonify(user.to_dict()), 200)
+            return response
+
+        else:
+            return {'error': 'email or password is incorrect'},401
+        
+api.add_resource(Login, '/login', endpoint='login')
+        
+class Logout(Resource):
+    def delete(self):
+        if session.get('user_id'):
+            session['user_id'] = None
+
+            return {'message': 'user logged out successfully'}, 200
+        
+        else:
+            return {'error': 'action not authorized'}, 401
+        
+api.add_resource(Logout, '/logout', endpoint='logout')
+
 class Users(Resource):
     def get(self):
         users = [user.to_dict() for user in User.query.all()]
@@ -57,12 +131,10 @@ class Users(Resource):
             username=username,
             email=email,
             password=password
-
         )
 
         db.session.add(new_user)
         db.session.commit()
-
         response = make_response(
             jsonify(new_user.to_dict()),
             201
@@ -239,21 +311,56 @@ class UserSearchQueries(Resource):
             200
         )
         return response
+
+    def post(self, user_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(message=f"User with ID {user_id} not found"), 404)
+
+        # Get search query details from the request
+        search_query = request.get_json().get('search_query')
+
+        # Create a new search query for the user
+        new_search_query = SearchHistory(
+            user_id=user.id,
+            search_query=search_query
+        )
+
+        db.session.add(new_search_query)
+        db.session.commit()
+
+        response = make_response(
+            jsonify(new_search_query.to_dict()),
+            201
+        )
+        return response
     
 api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpoint='user_search_queries')
 
 
 class AllVendorProducts(Resource):
     def get(self):
-        all_vendor_products = [vp.to_dict() for vp in VendorProduct.query.all()]
-        
-        if not all_vendor_products:
-            return jsonify({'message': 'No Vendor products found'}), 404
-    
+        product_name = request.args.get('product_name')
 
-        response = make_response(jsonify(all_vendor_products), 200)
+        if product_name:
+            filtered_vendor_products = VendorProduct.query \
+                .join(Product) \
+                .filter(Product.name.ilike(f"%{product_name}%")) \
+                .all()
+
+            if not filtered_vendor_products:
+                return jsonify({'message': f'No Vendor products found for product name: {product_name}'}), 404
+
+            response = make_response(jsonify([vp.to_dict() for vp in filtered_vendor_products]), 200)
+        else:
+            all_vendor_products = VendorProduct.query.all()
+
+            if not all_vendor_products:
+                return jsonify({'message': 'No Vendor products found'}), 404
+
+            response = make_response(jsonify([vp.to_dict() for vp in all_vendor_products]), 200)
+
         return response
-
 api.add_resource(AllVendorProducts, '/vendor_products', endpoint='all_vendor_products')
 
 
