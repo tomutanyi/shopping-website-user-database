@@ -136,6 +136,7 @@ class VendorProduct(db.Model, SerializerMixin):
             'product_description': self.product.description,
         }
 
+# Reviews endpointshere
 
 
 

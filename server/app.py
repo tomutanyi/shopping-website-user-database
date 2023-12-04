@@ -3,24 +3,70 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from werkzeug.exceptions import NotFound
+from datetime import datetime, timedelta
 
 from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
 app.config['SECRET_KEY'] ="msjahcufufrndf"
-
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///shopping.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= True
 
-CORS(app)
+CORS(app, supports_credentials=True)
 
 migrate = Migrate(app, db)
 api = Api(app)
 
 db.init_app(app)
 
+#a dictionary to store user-specific search history
+user_history = {}
+
+def add_to_search_history(user_id):
+    if user_id not in user_history:
+        user_history[user_id] = []
+
+    for history_item in user_history[user_id]:
+        if history_item['pageUrl'] == request.path:
+            history_item['dateTime'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            return
+
+    user_history[user_id].append({
+        'pageUrl': request.path,
+        'dateTime': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    })
+
+@app.before_request
+def before_request():
+    user_id = request.headers.get('user-id')  #passing the user ID in the headers
+    add_to_search_history(user_id)
+
+@app.route('/api/history', methods=['GET'])
+def get_search_history():
+    user_id = request.headers.get('user-id')
+    if user_id in user_history:
+        unique_history = {item['pageUrl']: item for item in user_history[user_id]}.values()
+        return jsonify(list(unique_history))
+    else:
+        return jsonify([])
+
+# reviews search queries
+class UserReviewsSearchQueries(Resource):
+    def get(self, user_id):
+        user = User.query.get(user_id)
+        if user is None:
+            return make_response(jsonify(mesage=f"User with ID {user_id} not found"),404)
+        # user's search queries for reviews
+        user_search_queries = [search.to_dict() for search in user.search_history if search.review_id is not None]
+
+        response = make_response(
+            jsonify(user_search_queries),
+            200
+        )
+        return response
 
 class CheckSession(Resource):
     def get(self):
@@ -54,6 +100,7 @@ class SignUp(Resource):
         db.session.commit()
 
         session['user_id'] = new_user.id
+        session.permanent=True
 
         response = make_response(
             jsonify(new_user.to_dict()),
@@ -73,6 +120,7 @@ class Login(Resource):
 
         if user and (user.password == password):
             session['user_id'] = user.id
+            session.permanent = True
             response = make_response(jsonify(user.to_dict()), 200)
             return response
 
