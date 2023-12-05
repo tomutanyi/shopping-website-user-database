@@ -249,14 +249,9 @@ class UserReviews(Resource):
 # Add a new endpoint for deleting a review
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='get_review_by_id')
 
-# Existing code (unchanged)
-
-
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='delete_review')
     
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='update_review_description')
-    
-
 
     
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews', endpoint='user_reviews')
