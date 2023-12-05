@@ -257,14 +257,9 @@ class UserReviews(Resource):
 # Add a new endpoint for deleting a review
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='get_review_by_id')
 
-# Existing code (unchanged)
-
-
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='delete_review')
     
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews/<int:review_id>', endpoint='update_review_description')
-    
-
 
     
 api.add_resource(UserReviews, '/users/<int:user_id>/reviews', endpoint='user_reviews')
@@ -318,17 +313,26 @@ class UserSearchQueries(Resource):
         )
         return response
     
+    
+    
 api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpoint='user_search_queries')
-
 
 class AllVendorProducts(Resource):
     def get(self):
+        page = request.args.get('page', type=int, default=1)
+        items_per_page = request.args.get('itemsPerPage', type=int, default=20)
+
+        # Calculate the offset based on the page and itemsPerPage
+        offset = (page - 1) * items_per_page
+
         product_name = request.args.get('product_name')
 
         if product_name:
             filtered_vendor_products = VendorProduct.query \
                 .join(Product) \
                 .filter(Product.name.ilike(f"%{product_name}%")) \
+                .offset(offset) \
+                .limit(items_per_page) \
                 .all()
 
             if not filtered_vendor_products:
@@ -336,7 +340,10 @@ class AllVendorProducts(Resource):
 
             response = make_response(jsonify([vp.to_dict() for vp in filtered_vendor_products]), 200)
         else:
-            all_vendor_products = VendorProduct.query.all()
+            all_vendor_products = VendorProduct.query \
+                .offset(offset) \
+                .limit(items_per_page) \
+                .all()
 
             if not all_vendor_products:
                 return jsonify({'message': 'No Vendor products found'}), 404
@@ -344,6 +351,8 @@ class AllVendorProducts(Resource):
             response = make_response(jsonify([vp.to_dict() for vp in all_vendor_products]), 200)
 
         return response
+
+
 api.add_resource(AllVendorProducts, '/vendor_products', endpoint='all_vendor_products')
 
 
