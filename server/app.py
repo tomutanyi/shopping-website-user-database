@@ -324,6 +324,8 @@ class AllVendorProducts(Resource):
                 .join(Product) \
                 .filter(Product.name.ilike(f"%{product_name}%")) \
                 .all()
+            
+            paginated_vendor_products = query.paginate(page=page, per_page=per_page, error_out=False)
 
             if not filtered_vendor_products:
                 return jsonify({'message': f'No Vendor products found for product name: {product_name}'}), 404
