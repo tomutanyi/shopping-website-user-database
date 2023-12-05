@@ -310,6 +310,8 @@ class UserSearchQueries(Resource):
         )
         return response
     
+    
+    
 api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpoint='user_search_queries')
 
 
