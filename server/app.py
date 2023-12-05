@@ -317,6 +317,8 @@ class AllVendorProducts(Resource):
 
         product_name = request.args.get('product_name')
 
+        query = VendorProduct.query.join(Product)
+
         if product_name:
             filtered_vendor_products = VendorProduct.query \
                 .join(Product) \
