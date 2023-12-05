@@ -312,6 +312,9 @@ api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpo
 
 class AllVendorProducts(Resource):
     def get(self):
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page', default=10, type=int)
+
         product_name = request.args.get('product_name')
 
         if product_name:
