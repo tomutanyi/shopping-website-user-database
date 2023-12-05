@@ -312,20 +312,13 @@ api.add_resource(UserSearchQueries, '/users/<int:user_id>/search_queries', endpo
 
 class AllVendorProducts(Resource):
     def get(self):
-        page = request.args.get('page', default=1, type=int)
-        per_page = request.args.get('per_page', default=10, type=int)
-
         product_name = request.args.get('product_name')
-
-        query = VendorProduct.query.join(Product)
 
         if product_name:
             filtered_vendor_products = VendorProduct.query \
                 .join(Product) \
                 .filter(Product.name.ilike(f"%{product_name}%")) \
                 .all()
-            
-            paginated_vendor_products = query.paginate(page=page, per_page=per_page, error_out=False)
 
             if not filtered_vendor_products:
                 return jsonify({'message': f'No Vendor products found for product name: {product_name}'}), 404
