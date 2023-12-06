@@ -2,18 +2,25 @@ from flask import Flask, make_response,jsonify,request,session
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from werkzeug.exceptions import NotFound
-from datetime import timedelta
-
+import redis
+from flask_bcrypt import Bcrypt
 from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
+bcrypt = Bcrypt(app=app)
+
 app.config['SECRET_KEY'] ="msjahcufufrndf"
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///shopping.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= True
+app.config["SESSION_TYPE"] = "redis"
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_USE_SIGNER"] = True
+app.config["SESSION_REDIS"] = redis.from_url("redis://127.0.0.1:6379")
+app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+
 
 CORS(app, supports_credentials=True)
 
@@ -25,12 +32,8 @@ db.init_app(app)
 
 class CheckSession(Resource):
     def get(self):
-        # if session.get('user_id'):
-        #     user = User.query.filter_by(id=session['user_id']).first()
-        #     return user.to_dict(), 200
-        # return {'error': 'resource not found'}, 401
 
-        user = User.query.filter(User.id == session.get('user_id')).first()
+        user = User.query.get(session.get("user_id"))
 
         if user:
             return (user.to_dict()), 200
@@ -48,14 +51,11 @@ class SignUp(Resource):
         new_user = User(
             username=username,
             email=email,
-            password=password
+            password=bcrypt.generate_password_hash(password=password)
         )
 
         db.session.add(new_user)
         db.session.commit()
-
-        session['user_id'] = new_user.id
-        session.permanent=True
 
         response = make_response(
             jsonify(new_user.to_dict()),
@@ -73,14 +73,17 @@ class Login(Resource):
 
         user = User.query.filter_by(email=email).first()
 
-        if user and (user.password == password):
-            session['user_id'] = user.id
-            session.permanent = True
-            response = make_response(jsonify(user.to_dict()), 200)
-            return response
+        if not user:
+            return {"error": "user not found"}, 401
+        if not bcrypt.check_password_hash(user.password, password):
+            return {"error": "passwords do not match"}, 401
+        
+        session["user_id"] = user.id
+        session.modified = True
+        
+        response = make_response(jsonify(user.to_dict()), 200)
 
-        else:
-            return {'error': 'email or password is incorrect'},401
+        return response
         
 api.add_resource(Login, '/login', endpoint='login')
         
