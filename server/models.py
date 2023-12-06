@@ -139,6 +139,7 @@ class VendorProduct(db.Model, SerializerMixin):
             'vendor': self.vendor.name,
             'product': self.product.name,
             'product_description': self.product.description,
+            'image_url': self.product.image_url
         }
 
 
