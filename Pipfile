@@ -32,6 +32,7 @@ typing-extensions = "*"
 werkzeug = "*"
 zipp = "*"
 pytest = "*"
+redis = "*"
 
 [dev-packages]
 
