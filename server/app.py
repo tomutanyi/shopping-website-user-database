@@ -27,6 +27,31 @@ api = Api(app)
 
 db.init_app(app)
 
+class History(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(50), nullable=False)
+    search_query = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+@app.route('/api/history/<user_id>', methods=['GET'])
+def get_user_history(user_id):
+    if not is_user_authenticated(user_id):
+        return jsonify({'error': 'Login to view history'}), 404
+
+    user_history = History.query.filter_by(user_id=user_id).all()
+    history_data = [{'id': entry.id, 'search_query': entry.search_query, 'timestamp': entry.timestamp} for entry in user_history]
+    return jsonify(history_data)
+
+@app.route('/api/history/detail/<history_id>', methods=['GET'])
+def get_history_detail(history_id):
+    history_detail = History.query.get(history_id)
+    if history_detail:
+        detail_data = {'id': history_detail.id, 'search_query': history_detail.search_query, 'timestamp': history_detail.timestamp}
+        return jsonify(detail_data)
+    return jsonify({'error': 'History not found'}), 404
+
+def is_user_authenticated(user_id):
+    return bool(user_id)
 
 class CheckSession(Resource):
     def get(self):
