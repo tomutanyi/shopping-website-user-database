@@ -93,14 +93,26 @@ class Login(Resource):
 
         user = User.query.filter_by(email=email).first()
 
-        if user and (user.password == password):
-            session['user_id'] = user.id
-            session.permanent = True
-            response = make_response(jsonify(user.to_dict()), 200)
-            return response
+        # if user and (user.password == password):
+        #     session['user_id'] = user.id
+        #     session.permanent = True
+        #     response = make_response(jsonify(user.to_dict()), 200)
+        #     return response
 
-        else:
-            return {'error': 'email or password is incorrect'},401
+        # else:
+        #     return {'error': 'email or password is incorrect'},401
+
+        if not user:
+            return {"error": "user not found"}, 401
+        if not bcrypt.check_password_hash(user.password, password):
+            return {"error": "passwords do not match"}, 401
+        
+        session["user_id"] = user.id
+        session.modified = True
+        
+        response = make_response(jsonify(user.to_dict()), 200)
+
+        return response
         
 api.add_resource(Login, '/login', endpoint='login')
         
