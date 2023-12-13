@@ -22,6 +22,7 @@ psycopg2
 python-dateutil
 pytz
 six
+redis
 sqlalchemy
 sqlalchemy-serializer
 typing-extensions
