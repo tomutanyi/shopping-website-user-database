@@ -125,9 +125,9 @@ class Login(Resource):
             return {"error": "user not found"}, 401
 
 
-        hashed_password = generate_password_hash(password).decode('utf-8')
+        # hashed_password = generate_password_hash(password).decode('utf-8')
         # Check if the provided plaintext password matches the hashed password
-        if check_password_hash(user.password, hashed_password):
+        if check_password_hash(user.password, password):
             session["user_id"] = user.id
             session.modified = True
 
