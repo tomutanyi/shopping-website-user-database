@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from datetime import datetime, timedelta
 import redis
-from flask_bcrypt import Bcrypt, check_password_hash
+from flask_bcrypt import Bcrypt, check_password_hash, generate_password_hash
 from werkzeug.exceptions import NotFound
 import os
 # from dotenv import load_dotenv
