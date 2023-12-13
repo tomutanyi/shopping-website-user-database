@@ -67,7 +67,7 @@ class SignUp(Resource):
         new_user = User(
             username=username,
             email=email,
-            password=bcrypt.generate_password_hash(password=password)
+            password=password
         )
 
         db.session.add(new_user)
@@ -86,6 +86,34 @@ class SignUp(Resource):
         
 api.add_resource(SignUp, '/signup', endpoint='signup')
 
+# class Login(Resource):
+#     def post(self):
+#         email = request.get_json()['email']
+#         password = request.get_json()['password']
+
+#         user = User.query.filter_by(email=email).first()
+
+#         # if user and (user.password == password):
+#         #     session['user_id'] = user.id
+#         #     session.permanent = True
+#         #     response = make_response(jsonify(user.to_dict()), 200)
+#         #     return response
+
+#         # else:
+#         #     return {'error': 'email or password is incorrect'},401
+
+#         if not user:
+#             return {"error": "user not found"}, 401
+#         if not bcrypt.check_password_hash(user.password, password):
+#             return {"error": "passwords do not match"}, 401
+        
+#         session["user_id"] = user.id
+#         session.modified = True
+        
+#         response = make_response(jsonify(user.to_dict()), 200)
+
+#         return response
+
 class Login(Resource):
     def post(self):
         email = request.get_json()['email']
@@ -93,26 +121,17 @@ class Login(Resource):
 
         user = User.query.filter_by(email=email).first()
 
-        # if user and (user.password == password):
-        #     session['user_id'] = user.id
-        #     session.permanent = True
-        #     response = make_response(jsonify(user.to_dict()), 200)
-        #     return response
-
-        # else:
-        #     return {'error': 'email or password is incorrect'},401
-
         if not user:
             return {"error": "user not found"}, 401
-        if not bcrypt.check_password_hash(user.password, password):
-            return {"error": "passwords do not match"}, 401
-        
-        session["user_id"] = user.id
-        session.modified = True
-        
-        response = make_response(jsonify(user.to_dict()), 200)
 
-        return response
+        if user.password == password:
+            session["user_id"] = user.id
+            session.modified = True
+
+            response = make_response(jsonify(user.to_dict()), 200)
+            return response
+        else:
+            return {"error": "passwords do not match"}, 401
         
 api.add_resource(Login, '/login', endpoint='login')
         
