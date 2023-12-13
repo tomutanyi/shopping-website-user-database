@@ -2,7 +2,9 @@ from flask import Flask, make_response,jsonify,request,session
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from datetime import datetime
+from datetime import datetime, timedelta
+import redis
+from flask_bcrypt import Bcrypt
 from werkzeug.exceptions import NotFound
 import os
 # from dotenv import load_dotenv
@@ -13,14 +15,23 @@ from models import db, User, Review, SearchHistory, VendorProduct, Product
 
 app =   Flask(__name__)
 
+bcrypt = Bcrypt(app=app)
+
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "default_secret_key")
 
 
 app.config['SQLALCHEMY_DATABASE_URI']=os.environ["DATABASE_URI"]
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JSONIFY_PRETTYPRINT_REGULAR']= True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
+app.config["SESSION_TYPE"] = "redis"
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_USE_SIGNER"] = True
+app.config["SESSION_REDIS"] = redis.from_url("redis://127.0.0.1:6379")
+app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 
-CORS(app)
+CORS(app, supports_credentials=True)
 
 migrate = Migrate(app, db)
 api = Api(app)
@@ -30,10 +41,20 @@ db.init_app(app)
 
 class CheckSession(Resource):
     def get(self):
-        if session.get('user_id'):
-            user = User.query.filter_by(id=session['user_id']).first()
-            return user.to_dict(), 200
-        return {'error': 'resource not found'}
+
+        # user = User.query.get(session.get("user_id"))
+
+        # if user:
+        #     return (user.to_dict()), 200
+        # else:
+        #     return {}, 401
+
+        user = User.query.filter(User.id == session.get('user_id')).first()
+
+        if user:
+            return (user.to_dict()), 200
+        else:
+            return {}, 401
     
 api.add_resource(CheckSession, '/session', endpoint='check_session')
     
@@ -46,13 +67,15 @@ class SignUp(Resource):
         new_user = User(
             username=username,
             email=email,
-            password=password
+            password=bcrypt.generate_password_hash(password=password)
         )
 
         db.session.add(new_user)
         db.session.commit()
 
         session['user_id'] = new_user.id
+        session.permanent=True
+
 
         response = make_response(
             jsonify(new_user.to_dict()),
@@ -65,20 +88,19 @@ api.add_resource(SignUp, '/signup', endpoint='signup')
 
 class Login(Resource):
     def post(self):
-        username = request.get_json()['username']
+        email = request.get_json()['email']
         password = request.get_json()['password']
 
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
 
         if user and (user.password == password):
             session['user_id'] = user.id
-
-
+            session.permanent = True
             response = make_response(jsonify(user.to_dict()), 200)
             return response
 
         else:
-            return {'error': 'username or password is incorrect'},401
+            return {'error': 'email or password is incorrect'},401
         
 api.add_resource(Login, '/login', endpoint='login')
         
@@ -93,6 +115,7 @@ class Logout(Resource):
             return {'error': 'action not authorized'}, 401
         
 api.add_resource(Logout, '/logout', endpoint='logout')
+
 
 class Users(Resource):
     def get(self):
