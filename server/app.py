@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from datetime import datetime, timedelta
 import redis
-from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt, check_password_hash
 from werkzeug.exceptions import NotFound
 import os
 # from dotenv import load_dotenv
@@ -67,7 +67,7 @@ class SignUp(Resource):
         new_user = User(
             username=username,
             email=email,
-            password=password
+            password=bcrypt.generate_password_hash(password=password)
         )
 
         db.session.add(new_user)
@@ -124,7 +124,8 @@ class Login(Resource):
         if not user:
             return {"error": "user not found"}, 401
 
-        if user.password == password:
+        # Check if the provided plaintext password matches the hashed password
+        if check_password_hash(user.password, password):
             session["user_id"] = user.id
             session.modified = True
 
