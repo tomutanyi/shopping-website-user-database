@@ -29,7 +29,7 @@ app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_REDIS"] = redis.from_url("redis://127.0.0.1:6379")
-app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 CORS(app, supports_credentials=True)
@@ -65,11 +65,15 @@ class SignUp(Resource):
         email = request.get_json()['email']
         password = request.get_json()['password']
 
+
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
         new_user = User(
             username=username,
             email=email,
-            password=password
+            password=hashed_password
         )
+
 
         db.session.add(new_user)
         db.session.commit()
@@ -125,7 +129,7 @@ class Login(Resource):
         if not user:
             return {"error": "user not found"}, 401
 
-        if user.password == password:
+        if bcrypt.check_password_hash(user.password, password):
             session["user_id"] = user.id
             session.modified = True
 
