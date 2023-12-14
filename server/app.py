@@ -7,6 +7,7 @@ import redis
 from flask_bcrypt import Bcrypt
 from werkzeug.exceptions import NotFound
 import os
+
 # from dotenv import load_dotenv
 
 # load_dotenv()
