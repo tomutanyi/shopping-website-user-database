@@ -39,6 +39,10 @@ api = Api(app)
 
 db.init_app(app)
 
+@app.route('/')
+def index():
+    return jsonify({"message": "Welcome to the Shopping API!"}), 200
+
 
 class CheckSession(Resource):
     def get(self):
